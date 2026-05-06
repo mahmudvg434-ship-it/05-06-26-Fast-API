@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import pandas as pd
 import google.generativeai as genai
+import os
 
 # -----------------------------
 # Gemini API (নিজের API key বসাও)
@@ -13,8 +14,8 @@ def get_ai_answer(q):
     try:
         response = model.generate_content(q)
         return response.text
-    except:
-        return "AI error"
+    except Exception as e:
+    return f"AI Error: {e}"
 
 # -----------------------------
 # CSV file
