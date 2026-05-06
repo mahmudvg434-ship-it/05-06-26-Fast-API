@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-
+#FastAPI+data validation
+#API system create
 app = FastAPI()
-
+#frontend theke question asbe
 class InquiryRequest(BaseModel):
     question: str
-
+#check korar jonno
 @app.get("/")
 def root():
     return {"message": "API is running"}
