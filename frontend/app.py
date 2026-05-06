@@ -15,7 +15,7 @@ def get_ai_answer(q):
         response = model.generate_content(q)
         return response.text
     except Exception as e:
-    return f"AI Error: {e}"
+        return f"AI Error: {e}"
 
 # -----------------------------
 # CSV file
