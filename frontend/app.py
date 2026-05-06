@@ -1,95 +1,28 @@
 import streamlit as st
 import requests
-import pandas as pd
-import google.generativeai as genai
-import os
 
-# -----------------------------
-# Gemini API (নিজের API key বসাও)
-# -----------------------------
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-1.5-flash")
+st.title("総務問い合わせシステム")
 
-def get_ai_answer(q):
-    try:
-        response = model.generate_content(q)
-        return response.text
-    except Exception as e:
-        return f"AI Error: {e}"
+question = st.text_area("問い合わせ内容", height=160)
 
-# -----------------------------
-# CSV file
-# -----------------------------
-CSV_FILE = "data.csv"
+if st.button("送信"):
 
-# -----------------------------
-# Sidebar menu
-# -----------------------------
-st.sidebar.title("Menu")
-page = st.sidebar.radio("Select", ["📝 Inquiry", "📊 Dashboard"])
+    if question.strip() == "":
+        st.error("問い合わせ内容を入力してください。")
 
-# =============================
-# 📝 Inquiry Page
-# =============================
-if page == "📝 Inquiry":
-
-    st.title("総務問い合わせシステム")
-
-    name = st.text_input("氏名")
-    question = st.text_area("問い合わせ内容")
-
-    if st.button("送信"):
-
-        if question.strip() == "":
-            st.error("内容を入力してください")
-
-        else:
-            # API call
-            res = requests.post(
+    else:
+        try:
+            response = requests.post(
                 "http://127.0.0.1:8001/analyze",
-                json={"question": question}
+                json={"question": question},
+                timeout=10
             )
 
-            result = res.json()
+            result = response.json()
 
-            # show API result
             st.write("カテゴリ:", result["category"])
             st.write("緊急度:", result["priority"])
+            st.write("回答:", result["answer"])
 
-            # AI answer
-            with st.spinner("AI thinking..."):
-                ai = get_ai_answer(question)
-
-            st.write("🤖 AI:", ai)
-
-            # save CSV
-            df = pd.DataFrame([{
-                "name": name,
-                "question": question,
-                "category": result["category"],
-                "priority": result["priority"],
-                "ai": ai
-            }])
-
-            df.to_csv(CSV_FILE, mode="a", header=False, index=False)
-
-            st.success("Saved!")
-            st.balloons()
-
-# =============================
-# 📊 Dashboard Page
-# =============================
-else:
-
-    st.title("Admin Dashboard")
-
-    try:
-        df = pd.read_csv(
-            CSV_FILE,
-            names=["name", "question", "category", "priority", "ai"]
-        )
-
-        st.dataframe(df)
-
-    except:
-        st.warning("No data yet")
+        except Exception as e:
+            st.error(f"API接続エラー: {e}")
