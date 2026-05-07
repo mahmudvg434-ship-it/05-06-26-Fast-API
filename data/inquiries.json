@@ -170,5 +170,65 @@
     "department": "人事・経理部",
     "status": "未対応",
     "answer": "給与に関するお問い合わせを受け付けました。\n\n現在、人事・経理部にて内容を確認しております。\n確認完了後、担当者よりご連絡いたしますので、\n今しばらくお待ちください。\n"
+  },
+  {
+    "id": 16,
+    "created_at": "2026-05-07 14:03:40",
+    "name": "Hasan",
+    "email": "mahmudvg434@gmail.com",
+    "question": "leave",
+    "category": "休暇",
+    "priority": "中",
+    "department": "総務部",
+    "status": "未対応",
+    "answer": "休暇申請に関するお問い合わせを受け付けました。\n\n現在、人事・経理部にて内容を確認しております。\n確認完了後、担当者よりご連絡いたしますので、\n今しばらくお待ちください。\n"
+  },
+  {
+    "id": 17,
+    "created_at": "2026-05-07 14:06:19",
+    "name": "Hasan",
+    "email": "mahmudvg434@gmail.com",
+    "question": "leave",
+    "category": "休暇",
+    "priority": "中",
+    "department": "総務部",
+    "status": "未対応",
+    "answer": "休暇申請に関するお問い合わせを受け付けました。\n\n現在、総務部にて内容を確認しております。\n\n確認完了後、担当者よりご連絡いたしますので、\n今しばらくお待ちください。\n"
+  },
+  {
+    "id": 18,
+    "created_at": "2026-05-07 14:13:00",
+    "name": "Hasan",
+    "email": "mahmudvg434@gmail.com",
+    "question": "leave",
+    "category": "休暇",
+    "priority": "中",
+    "department": "総務部",
+    "status": "未対応",
+    "answer": "休暇申請に関するお問い合わせを受け付けました。\n\n現在、総務部にて内容を確認しております。\n\n確認完了後、担当者よりご連絡いたしますので、\n今しばらくお待ちください。\n"
+  },
+  {
+    "id": 19,
+    "created_at": "2026-05-07 14:15:44",
+    "name": "",
+    "email": "",
+    "question": "f",
+    "category": "休暇",
+    "priority": "低",
+    "department": "総務部",
+    "status": "未対応",
+    "answer": "お問い合わせ内容を受け付けました。\n\n現在、総務部にて内容を確認しております。\n\n確認完了後、担当者よりご連絡いたしますので、\n今しばらくお待ちください。\n"
+  },
+  {
+    "id": 20,
+    "created_at": "2026-05-07 14:17:11",
+    "name": "f",
+    "email": "f",
+    "question": "f",
+    "category": "休暇",
+    "priority": "低",
+    "department": "総務部",
+    "status": "未対応",
+    "answer": "お問い合わせ内容を受け付けました。\n\n現在、総務部にて内容を確認しております。\n\n確認完了後、担当者よりご連絡いたしますので、\n今しばらくお待ちください。\n"
   }
 ]

@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from backend.storage import save_inquiry, load_inquiries
-from datetime import datetime
 
 app = FastAPI()
 
@@ -31,43 +30,55 @@ def root():
 def analyze_inquiry(request: InquiryRequest):
 
     text = request.question.lower()
-    category = request.category or "その他"
 
     # =========================
     # DEFAULT VALUES
     # =========================
+    category = request.category or "その他"
     department = "総務部"
     priority = "低"
+    answer = ""
 
     # =========================
-    # LOGIC
+    # LOGIC ENGINE
     # =========================
-    if category == "給与" or "salary" in text or "給料" in text:
+    if "salary" in text or "給料" in text or "pay" in text:
+        category = "給与"
         department = "人事・経理部"
         priority = "高"
         answer = "給与に関するお問い合わせを受け付けました。"
 
-    elif category == "休暇" or "leave" in text or "休暇" in text:
+    elif "leave" in text or "休暇" in text or "vacation" in text:
+        category = "休暇"
         department = "総務部"
         priority = "中"
         answer = "休暇申請に関するお問い合わせを受け付けました。"
 
-    elif category == "福利厚生":
+    elif "benefit" in text or "福利厚生" in text:
+        category = "福利厚生"
         department = "総務部"
         priority = "中"
         answer = "福利厚生に関するお問い合わせを受け付けました。"
 
     else:
-        department = "総務部"
-        priority = "低"
         answer = "お問い合わせ内容を受け付けました。"
 
     # =========================
-    # JAPANESE COMPANY MESSAGE (YOU ASKED THIS PART)
+    # DYNAMIC JAPANESE MESSAGE (FIXED)
     # =========================
-    answer += """
+    if department == "人事・経理部":
+        answer += """
 
 現在、人事・経理部にて内容を確認しております。
+"""
+
+    else:
+        answer += f"""
+
+現在、{department}にて内容を確認しております。
+"""
+
+    answer += """
 確認完了後、担当者よりご連絡いたしますので、
 今しばらくお待ちください。
 """

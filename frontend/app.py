@@ -3,8 +3,10 @@ import requests
 
 st.set_page_config(page_title="総務問い合わせシステム", layout="centered")
 
+API_URL = "http://127.0.0.1:8001"
+
 # =========================
-# SIDEBAR MENU
+# MENU
 # =========================
 menu = st.sidebar.selectbox(
     "メニュー",
@@ -12,13 +14,7 @@ menu = st.sidebar.selectbox(
 )
 
 # =========================
-# API BASE URL
-# =========================
-API_URL = "http://127.0.0.1:8001"
-
-
-# =========================
-# PAGE 1 - INPUT
+# INPUT PAGE
 # =========================
 if menu == "総務問い合わせ入力":
 
@@ -38,60 +34,47 @@ if menu == "総務問い合わせ入力":
 
         if question.strip() == "":
             st.error("問い合わせ内容を入力してください。")
-            st.stop()
+        else:
 
-        try:
-            with st.spinner("処理中..."):
+            try:
+                with st.spinner("送信中..."):
 
-                response = requests.post(
-                    f"{API_URL}/analyze",
-                    json={
-                        "name": name,
-                        "email": email,
-                        "category": category,   # ✅ FIXED
-                        "question": question
-                    },
-                    timeout=30
-                )
+                    response = requests.post(
+                        f"{API_URL}/analyze",
+                        json={
+                            "name": name,
+                            "email": email,
+                            "category": category,
+                            "question": question
+                        },
+                        timeout=30
+                    )
 
                 if response.status_code != 200:
-                    st.error("API エラーが発生しました")
-                    st.stop()
+                    st.error("API エラー")
+                else:
+                    result = response.json()
 
-                result = response.json()
+                    st.success("送信完了 🎉")
 
-            st.success("送信完了 🎉")
+                    st.subheader("📦 結果")
 
-            # =========================
-            # RESULT CARD
-            # =========================
-            st.markdown("## 📦 結果")
+                    st.write("👤 名前:", result.get("name", ""))
+                    st.write("📧 Email:", result.get("email", ""))
+                    st.write("📂 カテゴリ:", result.get("category", ""))
+                    st.write("🏢 部署:", result.get("department", ""))
+                    st.write("⚡ 緊急度:", result.get("priority", ""))
+                    st.write("📌 ステータス:", result.get("status", ""))
 
-            st.markdown(f"""
-            <div style="
-                background:#f9f9f9;
-                padding:20px;
-                border-radius:12px;
-                border-left:6px solid #4CAF50;
-                box-shadow:2px 2px 12px rgba(0,0,0,0.1);
-            ">
-                <p>👤 <b>名前:</b> {result.get('name', '')}</p>
-                <p>📧 <b>Email:</b> {result.get('email', '')}</p>
-                <p>📂 <b>カテゴリ:</b> {result.get('category', '')}</p>
-                <p>🏢 <b>部署:</b> {result.get('department', '')}</p>
-                <p>⚡ <b>緊急度:</b> {result.get('priority', '')}</p>
-                <p>📌 <b>ステータス:</b> {result.get('status', '')}</p>
-                <hr>
-                <p>🤖 <b>回答:</b><br>{result.get('answer', '')}</p>
-            </div>
-            """, unsafe_allow_html=True)
+                    st.markdown("### 🤖 回答")
+                    st.info(result.get("answer", ""))
 
-        except Exception as e:
-            st.error(f"❌ 接続エラー: {e}")
+            except Exception as e:
+                st.error(f"エラー: {e}")
 
 
 # =========================
-# PAGE 2 - HISTORY
+# HISTORY PAGE (CLEAN UI)
 # =========================
 elif menu == "履歴":
 
@@ -108,28 +91,34 @@ elif menu == "履歴":
 
         if not inquiries:
             st.info("履歴がありません")
-            st.stop()
 
-        for item in reversed(inquiries):
+        else:
 
-            st.markdown("---")
+            for item in reversed(inquiries):
 
-            st.markdown(f"""
-            ### 🆔 ID: {item.get('id', '')}
+                with st.container():
 
-            📅 **日時:** {item.get('created_at', '')}  
-            👤 **名前:** {item.get('name', '')}  
-            📧 **Email:** {item.get('email', '')}  
+                    st.markdown("---")
 
-            📝 **内容:** {item.get('question', '')}  
-            📂 **カテゴリ:** {item.get('category', '')}  
-            🏢 **部署:** {item.get('department', '')}  
-            ⚡ **緊急度:** {item.get('priority', '')}  
-            📌 **ステータス:** {item.get('status', '')}  
+                    st.subheader(f"🆔 ID: {item.get('id','')}")
 
-            🤖 **回答:**  
-            {item.get('answer', '')}
-            """)
+                    col1, col2 = st.columns(2)
+
+                    with col1:
+                        st.write("📅 日時:", item.get("created_at", ""))
+                        st.write("👤 名前:", item.get("name", ""))
+                        st.write("📧 Email:", item.get("email", ""))
+                        st.write("📂 カテゴリ:", item.get("category", ""))
+
+                    with col2:
+                        st.write("🏢 部署:", item.get("department", ""))
+                        st.write("⚡ 緊急度:", item.get("priority", ""))
+                        st.write("📌 ステータス:", item.get("status", ""))
+
+                    st.write("📝 内容:", item.get("question", ""))
+
+                    st.markdown("**🤖 回答:**")
+                    st.success(item.get("answer", ""))
 
     except Exception as e:
-        st.error(f"❌ API接続エラー: {e}")
+        st.error(f"エラー: {e}")
