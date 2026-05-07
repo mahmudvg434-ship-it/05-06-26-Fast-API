@@ -1,81 +1,105 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-import google.generativeai as genai
-import os
-from dotenv import load_dotenv
-
-# -----------------------------
-# LOAD GEMINI KEY
-# -----------------------------
-load_dotenv()
-genai.configure(API_KEY ="AIzaSyCBKKEM941MKtv8Gi_EcJS3EEjK4X7iNfc")
-
-model = genai.GenerativeModel("gemini-2.5-flash")
+from backend.storage import save_inquiry, load_inquiries
 
 app = FastAPI()
 
-# -----------------------------
+# =========================
 # REQUEST MODEL
-# -----------------------------
+# =========================
 class InquiryRequest(BaseModel):
+    name: str
+    email: str
     question: str
 
-# -----------------------------
-# ROOT CHECK
-# -----------------------------
+
+# =========================
+# ROOT API
+# =========================
 @app.get("/")
 def root():
     return {"message": "API is running"}
 
-# -----------------------------
-# MAIN AI ENDPOINT
-# -----------------------------
+
+# =========================
+# ANALYZE API
+# =========================
 @app.post("/analyze")
 def analyze_inquiry(request: InquiryRequest):
 
-    prompt = f"""
-あなたは会社の総務部のAIアシスタントです。
+    text = request.question.lower()
 
-ユーザーの問い合わせ内容:
-{request.question}
+    # -------------------------
+    # CATEGORY LOGIC
+    # -------------------------
+    if "salary" in text or "給料" in text:
+        category = "給与"
+        department = "人事・経理部"
+        priority = "高"
 
-【重要ルール】
-- ユーザーの入力が英語の場合は必ず：
-「申し訳ありませんが、日本語のみで入力してください。」
-と返すこと
+        answer = """
+給与に関するお問い合わせを受け付けました。
 
-- 日本語のみで丁寧に回答すること
-- カテゴリ・緊急度・回答を必ず含めること
-
-【カテゴリ例】
-給与、休暇、人事、ITサポート、経費、その他
-
-【緊急度】
-低、中、高、緊急
-
-【出力形式（必ずJSONのみ）】
-{{
-  "category": "",
-  "priority": "",
-  "answer": ""
-}}
+人事・経理部に内容を共有いたします。
+確認後、担当者よりご連絡いたしますので、
+しばらくお待ちください。
 """
 
-    try:
-        response = model.generate_content(prompt)
-        text = response.text
+    elif "leave" in text or "休暇" in text:
+        category = "休暇"
+        department = "総務部"
+        priority = "中"
 
-        # Gemini sometimes adds ```json, so clean it
-        text = text.replace("```json", "").replace("```", "")
+        answer = """
+休暇申請に関するお問い合わせを受け付けました。
 
-        import json
-        result = json.loads(text)
+申請方法について確認後、
+総務部よりご案内いたします。
+"""
 
-        return result
+    elif "pc" in text or "パソコン" in text:
+        category = "設備"
+        department = "情報システム部"
+        priority = "中"
 
-    except Exception as e:
-        return {
-            "category": "その他",
-            "priority": "低",
-            "answer": f"AI error: {str(e)}"
-        }
+        answer = """
+設備に関するお問い合わせを受け付けました。
+
+情報システム部に確認を依頼いたします。
+"""
+
+    else:
+        category = "その他"
+        department = "総務部"
+        priority = "低"
+
+        answer = """
+お問い合わせ内容を受け付けました。
+
+担当部署に内容を共有し、
+順次対応いたします。
+"""
+
+    # =========================
+    # SAVE JSON HISTORY
+    # =========================
+    item = save_inquiry(
+        name=request.name,
+        email=request.email,
+        question=request.question,
+        category=category,
+        priority=priority,
+        department=department,
+        status="未対応",
+        answer=answer
+    )
+
+    return item
+
+
+# =========================
+# HISTORY API
+# =========================
+@app.get("/inquiries")
+def get_inquiries():
+    return load_inquiries()
