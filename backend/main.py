@@ -2,7 +2,33 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from backend.storage import save_inquiry, load_inquiries
 
+import os
+from dotenv import load_dotenv
+from google import genai
+
+# =========================
+# LOAD ENV
+# =========================
+load_dotenv()
+
+API_KEY = os.getenv("GEMINI_API_KEY")
+MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+
 app = FastAPI()
+
+# =========================
+# SAFE GEMINI CLIENT INIT
+# =========================
+client = None
+
+if not API_KEY:
+    print("❌ GEMINI_API_KEY not found in .env file")
+else:
+    try:
+        client = genai.Client(api_key=API_KEY)
+        print("✅ Gemini Client Initialized")
+    except Exception as e:
+        print("❌ Gemini init failed:", e)
 
 
 # =========================
@@ -13,6 +39,39 @@ class InquiryRequest(BaseModel):
     email: str | None = None
     category: str | None = None
     question: str
+
+
+# =========================
+# GEMINI FUNCTION
+# =========================
+def analyze_with_gemini(question: str):
+
+    if client is None:
+        return "AIシステムは現在利用できません。（API設定を確認してください）"
+
+    prompt = f"""
+あなたは会社の総務AIです。
+
+以下の形式で回答してください：
+1. カテゴリ
+2. 緊急度（高・中・低）
+3. 回答案
+
+問い合わせ:
+{question}
+"""
+
+    try:
+        response = client.models.generate_content(
+            model=MODEL,
+            contents=prompt
+        )
+
+        return response.text
+
+    except Exception as e:
+        print("❌ Gemini Error:", e)
+        return "AIシステムでエラーが発生しましたが、問い合わせは受け付けました。"
 
 
 # =========================
@@ -29,72 +88,17 @@ def root():
 @app.post("/analyze")
 def analyze_inquiry(request: InquiryRequest):
 
-    text = request.question.lower()
+    ai_result = analyze_with_gemini(request.question)
 
-    # =========================
-    # DEFAULT VALUES
-    # =========================
-    category = request.category or "その他"
-    department = "総務部"
-    priority = "低"
-    answer = ""
-
-    # =========================
-    # LOGIC ENGINE
-    # =========================
-    if "salary" in text or "給料" in text or "pay" in text:
-        category = "給与"
-        department = "人事・経理部"
-        priority = "高"
-        answer = "給与に関するお問い合わせを受け付けました。"
-
-    elif "leave" in text or "休暇" in text or "vacation" in text:
-        category = "休暇"
-        department = "総務部"
-        priority = "中"
-        answer = "休暇申請に関するお問い合わせを受け付けました。"
-
-    elif "benefit" in text or "福利厚生" in text:
-        category = "福利厚生"
-        department = "総務部"
-        priority = "中"
-        answer = "福利厚生に関するお問い合わせを受け付けました。"
-
-    else:
-        answer = "お問い合わせ内容を受け付けました。"
-
-    # =========================
-    # DYNAMIC JAPANESE MESSAGE (FIXED)
-    # =========================
-    if department == "人事・経理部":
-        answer += """
-
-現在、人事・経理部にて内容を確認しております。
-"""
-
-    else:
-        answer += f"""
-
-現在、{department}にて内容を確認しております。
-"""
-
-    answer += """
-確認完了後、担当者よりご連絡いたしますので、
-今しばらくお待ちください。
-"""
-
-    # =========================
-    # SAVE HISTORY
-    # =========================
     item = save_inquiry(
         name=request.name,
         email=request.email,
         question=request.question,
-        category=category,
-        priority=priority,
-        department=department,
+        category=request.category or "その他",
+        priority="AI判断",
+        department="AIシステム",
         status="未対応",
-        answer=answer,
+        answer=ai_result
     )
 
     return item

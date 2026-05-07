@@ -2,38 +2,41 @@ import json
 from pathlib import Path
 from datetime import datetime
 
-DATA_PATH = Path("data/inquiries.json")
+DATA_PATH = Path("backend/data/inquiries.json")
+
+# =========================
+# INIT FILE
+# =========================
+DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+if not DATA_PATH.exists():
+    with open(DATA_PATH, "w", encoding="utf-8") as f:
+        json.dump([], f, ensure_ascii=False, indent=2)
 
 
 # =========================
-# LOAD
+# LOAD DATA
 # =========================
 def load_inquiries():
-
-    if not DATA_PATH.exists():
+    try:
+        with open(DATA_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        print("❌ Load Error:", e)
         return []
 
-    with DATA_PATH.open("r", encoding="utf-8") as f:
-        return json.load(f)
-
 
 # =========================
-# SAVE
+# SAVE DATA
 # =========================
-def save_inquiry(
-    name,
-    email,
-    question,
-    category,
-    priority,
-    department,
-    status,
-    answer
-):
+def save_inquiry(name, email, question, category, priority, department, status, answer):
 
-    inquiries = load_inquiries()
+    data = load_inquiries()
 
-    new_id = len(inquiries) + 1
+    # safe ID generation (FIXED)
+    new_id = 1
+    if data:
+        new_id = max(item["id"] for item in data) + 1
 
     item = {
         "id": new_id,
@@ -48,16 +51,13 @@ def save_inquiry(
         "answer": answer
     }
 
-    inquiries.append(item)
+    data.append(item)
 
-    DATA_PATH.parent.mkdir(exist_ok=True)
+    try:
+        with open(DATA_PATH, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
 
-    with DATA_PATH.open("w", encoding="utf-8") as f:
-        json.dump(
-            inquiries,
-            f,
-            ensure_ascii=False,
-            indent=2
-        )
+    except Exception as e:
+        print("❌ Save Error:", e)
 
     return item

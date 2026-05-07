@@ -1,9 +1,13 @@
 import streamlit as st
 import requests
 
+# =========================
+# CONFIG
+# =========================
 st.set_page_config(page_title="総務問い合わせシステム", layout="centered")
 
 API_URL = "http://127.0.0.1:8001"
+
 
 # =========================
 # MENU
@@ -13,8 +17,9 @@ menu = st.sidebar.selectbox(
     ["総務問い合わせ入力", "履歴"]
 )
 
+
 # =========================
-# INPUT PAGE
+# PAGE 1 - INPUT FORM
 # =========================
 if menu == "総務問い合わせ入力":
 
@@ -24,7 +29,7 @@ if menu == "総務問い合わせ入力":
     email = st.text_input("📧 Email")
 
     category = st.selectbox(
-        "カテゴリ",
+        "📂 カテゴリ",
         ["休暇", "給与", "福利厚生", "その他"]
     )
 
@@ -32,10 +37,10 @@ if menu == "総務問い合わせ入力":
 
     if st.button("API 送信する"):
 
-        if question.strip() == "":
+        if not question.strip():
             st.error("問い合わせ内容を入力してください。")
-        else:
 
+        else:
             try:
                 with st.spinner("送信中..."):
 
@@ -51,7 +56,7 @@ if menu == "総務問い合わせ入力":
                     )
 
                 if response.status_code != 200:
-                    st.error("API エラー")
+                    st.error(response.text)
                 else:
                     result = response.json()
 
@@ -74,7 +79,7 @@ if menu == "総務問い合わせ入力":
 
 
 # =========================
-# HISTORY PAGE (CLEAN UI)
+# PAGE 2 - HISTORY
 # =========================
 elif menu == "履歴":
 
@@ -93,12 +98,12 @@ elif menu == "履歴":
             st.info("履歴がありません")
 
         else:
-
             for item in reversed(inquiries):
 
-                with st.container():
+                st.markdown("---")
 
-                    st.markdown("---")
+                # CARD STYLE BOX
+                with st.container():
 
                     st.subheader(f"🆔 ID: {item.get('id','')}")
 
@@ -115,9 +120,10 @@ elif menu == "履歴":
                         st.write("⚡ 緊急度:", item.get("priority", ""))
                         st.write("📌 ステータス:", item.get("status", ""))
 
-                    st.write("📝 内容:", item.get("question", ""))
+                    st.write("📝 内容:")
+                    st.write(item.get("question", ""))
 
-                    st.markdown("**🤖 回答:**")
+                    st.markdown("### 🤖 回答")
                     st.success(item.get("answer", ""))
 
     except Exception as e:
